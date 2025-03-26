@@ -98,7 +98,7 @@ def create_story_directories(story_num):
     }
     
     # 创建迭代结果目录
-    for i in range(1, 11):  # 假设最多10次迭代
+    for i in range(1, 9):  # 假设最多10次迭代
         directories[f'iteration_{i}'] = f'{story_dir}/results_xl{i}'
     
     # 创建所有必要的目录

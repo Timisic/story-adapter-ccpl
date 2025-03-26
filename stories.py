@@ -2,7 +2,8 @@
 character_replacements = {
     'Robinson': 'a man, wearing tattered sailor clothes.',
     'Friday': 'a chimpanzee.',
-    'Lin Zhen': 'A female programmer, physically and mentally exhausted.'
+    'Lin Zhen': 'A female programmer, physically and mentally exhausted.',
+    'Zhang': 'a college student in a blue jacket'
 }
 
 # 存储所有的故事集合
@@ -14,7 +15,13 @@ stories = {
         "In an abstract consciousness space, a translucent figure hovers...",
         "In a neuroscience laboratory, a researcher points to a holographic brain map..."
     ],
-    1: [],
+    1: [
+        "In a park, a dejected Zhang is sitting on a bench, looking downcast, recollecting his failed exam despite hard revision.",
+        "Zhang, with a furrowed brow, is deep in self - doubting thoughts like 'Am I too incompetent? Will I never succeed?'",
+        "Zhang, with a determined look, is starting his mindfulness meditation session, ready to focus.",
+        "With eyes closed, Zhang is following the system's guidance for mindful breathing, a serene expression on his face.",
+        "Zhang opens his eyes, looking much calmer, realizing that failure is a chance to learn, not a reflection of his worth."
+    ],
     2: [],
     3: [],
     4: [],

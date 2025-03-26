@@ -2,4 +2,5 @@ IP-Adapter/
 RealVisXL_V4.0/
 story/
 
+**/__pycache__/
 *.DS_Store
