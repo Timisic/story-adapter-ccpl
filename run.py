@@ -16,7 +16,7 @@ parser.add_argument('--image_encoder_path', type=str, default=r"./IP-Adapter/sdx
 parser.add_argument('--ip_ckpt', default=r"./IP-Adapter/sdxl_models/ip-adapter_sdxl.bin", type=str)
 parser.add_argument('--style', type=str, default='realistic', choices=["comic","film","realistic"])
 parser.add_argument('--device', default="cuda", type=str)
-parser.add_argument('--story', default=stories[0], nargs='+', type=str)
+parser.add_argument('--story', type=int, default=0, help='故事编号 (0-6), 或使用自定义故事列表')
 
 args = parser.parse_args()
 
@@ -64,13 +64,18 @@ print(seed)
 storyadapter = StoryAdapterXL(pipe, image_encoder_path, ip_ckpt, device)
 
 character=True
-# 替换角色
-prompts = replace_characters(args.story, character)
+# 获取故事内容
+if isinstance(args.story, int):
+    if args.story in stories:
+        story_content = stories[args.story]
+        story_num = args.story
+    else:
+        raise ValueError(f"故事编号 {args.story} 不存在")
+else:
+    story_content = args.story
+    story_num = "custom"
 
-# 故事判断逻辑
-story_content, story_num = get_story(args.story)
-if story_content is None:
-    raise ValueError("Invalid story input")
+prompts = replace_characters(story_content, character)
 
 def create_story_directories(story_num):
     """
@@ -117,6 +122,7 @@ def generate_initial_images(prompts, story_dirs, seed, style):
     """
     initial_images = []
     
+    print(f"\n正在生成初始图像，保存至: {story_dirs['initial_results']}")
     # 为每个提示生成初始图像
     for i, text in enumerate(prompts):
         images = storyadapter.generate(
@@ -134,8 +140,8 @@ def generate_initial_images(prompts, story_dirs, seed, style):
         output_path = f'{story_dirs["initial_results"]}/img_{i}.png'
         grid = image_grid(images, 1, 1)
         grid.save(output_path)
+        print(f"已保存第 {i+1}/{len(prompts)} 张初始图像")
         
-        # 调整图像大小并添加到列表
         resized_image = Image.open(output_path).resize((256, 256))
         initial_images.append(resized_image)
     
@@ -152,16 +158,14 @@ def generate_iterative_images(prompts, initial_images, story_dirs, seed, style):
         seed: 随机种子
         style: 生成风格
     """
-    # 定义缩放比例范围
     scales = np.linspace(0.3, 0.5, 10)
     current_images = initial_images
     
-    # 进行多次迭代生成
     for i, scale in enumerate(scales, 1):
-        print(f'正在进行第 {i} 轮迭代生成')
+        current_dir = story_dirs[f"iteration_{i}"]
+        print(f"\n开始第 {i} 轮迭代生成，图像将保存至: {current_dir}")
         new_images = []
         
-        # 为每个提示生成新的图像
         for y, text in enumerate(prompts):
             images = storyadapter.generate(
                 pil_image=current_images,
@@ -175,13 +179,14 @@ def generate_iterative_images(prompts, initial_images, story_dirs, seed, style):
             )
             
             # 保存生成的图像
-            output_path = f'{story_dirs[f"iteration_{i}"]}/img_{y}.png'
+            output_path = f'{current_dir}/img_{y}.png'
             grid = image_grid(images, 1, 1)
             grid.save(output_path)
+            print(f"已保存第 {y+1}/{len(prompts)} 张图像")
             
-            # 调整图像大小并添加到列表
             new_images.append(images[0].resize((256, 256)))
         
+        print(f"第 {i} 轮迭代完成")
         current_images = new_images
 
 
