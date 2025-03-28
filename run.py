@@ -117,6 +117,41 @@ def calculate_grid_size(num_images):
         rows -= 1
     return rows, cols
 
+def add_text_to_image(image, text):
+    """在图像上添加文字注释，类似字幕效果"""
+    draw = ImageDraw.Draw(image)
+    # 计算合适的字体大小（基于图像高度）
+    font_size = int(image.height * 0.05)  # 图像高度的5%
+    try:
+        # 优先使用苹方字体以支持中文
+        font = ImageFont.truetype("/System/Library/Fonts/PingFang.ttc", font_size)
+    except:
+        # 如果找不到苹方字体，尝试其他中文字体
+        try:
+            font = ImageFont.truetype("/System/Library/Fonts/STHeiti Light.ttc", font_size)
+        except:
+            font = ImageFont.load_default()
+            font_size = 24  # 默认字体大小
+
+    # 计算文字位置
+    text_bbox = draw.textbbox((0, 0), text, font=font)
+    text_width = text_bbox[2] - text_bbox[0]
+    text_height = text_bbox[3] - text_bbox[1]
+    
+    # 文字位置（底部居中）
+    x = (image.width - text_width) // 2
+    y = image.height - text_height - int(image.height * 0.08)  # 距底部8%
+    
+    # 添加半透明黑色背景
+    padding = int(font_size * 0.5)  # 文字周围的内边距
+    background_box = [0, y - padding, image.width, y + text_height + padding]
+    draw.rectangle(background_box, fill=(0, 0, 0, 180))  # 更深的半透明背景
+    
+    # 绘制文字
+    draw.text((x, y), text, font=font, fill=(255, 255, 255))  # 纯白色文字
+    return image
+
+# 在 generate_initial_images 函数中替换文字添加部分
 def generate_initial_images(prompts, story_dirs, seed, style, annotations=None, use_annotations=False):
     initial_images = []
     
@@ -137,23 +172,7 @@ def generate_initial_images(prompts, story_dirs, seed, style, annotations=None, 
         output_path = f'{story_dirs["initial_results"]}/img_{i}.png'
         grid = image_grid(images, 1, 1)
         if use_annotations and annotations and i < len(annotations):
-            # 在图像上添加文字注释
-            from PIL import ImageDraw, ImageFont
-            draw = ImageDraw.Draw(grid)
-            try:
-                font = ImageFont.truetype("/System/Library/Fonts/PingFang.ttc", 24)
-            except:
-                font = ImageFont.load_default()
-            text = annotations[i]
-            # 在图像底部添加文字
-            text_bbox = draw.textbbox((0, 0), text, font=font)
-            text_width = text_bbox[2] - text_bbox[0]
-            text_height = text_bbox[3] - text_bbox[1]
-            x = (grid.width - text_width) // 2
-            y = grid.height - text_height - 10
-            # 添加半透明背景
-            draw.rectangle([0, y-5, grid.width, y+text_height+5], fill=(0, 0, 0, 128))
-            draw.text((x, y), text, font=font, fill=(255, 255, 255))
+            grid = add_text_to_image(grid, annotations[i])
         grid.save(output_path)
         print(f"已保存第 {i+1}/{len(prompts)} 张初始图像")
         
@@ -176,6 +195,7 @@ def generate_initial_images(prompts, story_dirs, seed, style, annotations=None, 
     
     return initial_images
 
+# 在 generate_iterative_images 函数中替换文字添加部分
 def generate_iterative_images(prompts, initial_images, story_dirs, seed, style, annotations=None, use_annotations=False):
     scales = np.linspace(0.3, 0.5, 10)
     current_images = initial_images
@@ -201,23 +221,7 @@ def generate_iterative_images(prompts, initial_images, story_dirs, seed, style, 
             output_path = f'{current_dir}/img_{y}.png'
             grid = image_grid(images, 1, 1)
             if use_annotations and annotations and y < len(annotations):
-                # 在图像上添加文字注释
-                from PIL import ImageDraw, ImageFont
-                draw = ImageDraw.Draw(grid)
-                try:
-                    font = ImageFont.truetype("/System/Library/Fonts/PingFang.ttc", 24)
-                except:
-                    font = ImageFont.load_default()
-                text = annotations[y]
-                # 在图像底部添加文字
-                text_bbox = draw.textbbox((0, 0), text, font=font)
-                text_width = text_bbox[2] - text_bbox[0]
-                text_height = text_bbox[3] - text_bbox[1]
-                x = (grid.width - text_width) // 2
-                y = grid.height - text_height - 10
-                # 添加半透明背景
-                draw.rectangle([0, y-5, grid.width, y+text_height+5], fill=(0, 0, 0, 128))
-                draw.text((x, y), text, font=font, fill=(255, 255, 255))
+                grid = add_text_to_image(grid, annotations[y])
             grid.save(output_path)
             print(f"已保存第 {y+1}/{len(prompts)} 张图像")
             
