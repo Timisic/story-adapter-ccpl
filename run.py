@@ -7,7 +7,7 @@ from ip_adapter import StoryAdapterXL
 import os
 import random
 import argparse
-from stories import get_story, replace_characters, stories
+from stories import get_story, replace_characters
 
 
 parser = argparse.ArgumentParser()
@@ -17,7 +17,7 @@ parser.add_argument('--ip_ckpt', default=r"./IP-Adapter/sdxl_models/ip-adapter_s
 parser.add_argument('--style', type=str, default='realistic', choices=["comic","film","realistic"])
 parser.add_argument('--device', default="cuda", type=str)
 parser.add_argument('--story', type=int, default=0, help='故事编号，或使用自定义故事列表')
-parser.add_argument('--use_annotations', default=False, action='store_true', help='是否在图像上添加文字注释')
+parser.add_argument('--use_annotations', action='store_true', help='是否在图像上添加文字注释')
 
 
 args = parser.parse_args()
@@ -104,6 +104,19 @@ def create_story_directories(story_num):
         
     return directories
 
+def calculate_grid_size(num_images):
+    """计算最优的网格大小，避免过多留白"""
+    if num_images <= 4:
+        return 2, 2
+    # 计算最小的能容纳所有图片的方形网格
+    cols = int(np.ceil(np.sqrt(num_images)))
+    # 计算所需的行数
+    rows = int(np.ceil(num_images / cols))
+    # 如果最后一行全是空的，减少一行
+    if rows * cols - num_images >= cols:
+        rows -= 1
+    return rows, cols
+
 def generate_initial_images(prompts, story_dirs, seed, style, annotations=None, use_annotations=False):
     initial_images = []
     
@@ -149,17 +162,15 @@ def generate_initial_images(prompts, story_dirs, seed, style, annotations=None, 
     
     # 拼接组合图像
     num_images = len(initial_images)
-    if num_images <= 4:
-        rows, cols = 2, 2
-    else:
-        rows = cols = int(np.ceil(np.sqrt(num_images)))
+    rows, cols = calculate_grid_size(num_images)
     
-    # 填充空白图像确保能够完整拼接
-    while len(initial_images) < rows * cols:
+    # 只填充必要的空白图像
+    needed_images = rows * cols
+    while len(initial_images) < needed_images:
         blank_image = Image.new('RGB', (256, 256), 'white')
         initial_images.append(blank_image)
     
-    combined = image_grid(initial_images, rows, cols)
+    combined = image_grid(initial_images[:needed_images], rows, cols)
     combined.save(f'{story_dirs["initial_results"]}/combined_figure.png')
     print(f"已保存组合图像至 {story_dirs['initial_results']}/combined_figure.png")
     
@@ -214,17 +225,15 @@ def generate_iterative_images(prompts, initial_images, story_dirs, seed, style, 
         
         # 拼接组合图像
         num_images = len(new_images)
-        if num_images <= 4:
-            rows, cols = 2, 2
-        else:
-            rows = cols = int(np.ceil(np.sqrt(num_images)))
+        rows, cols = calculate_grid_size(num_images)
         
-        # 填充空白图像确保能够完整拼接
-        while len(new_images) < rows * cols:
+        # 只填充必要的空白图像
+        needed_images = rows * cols
+        while len(new_images) < needed_images:
             blank_image = Image.new('RGB', (256, 256), 'white')
             new_images.append(blank_image)
         
-        combined = image_grid(new_images, rows, cols)
+        combined = image_grid(new_images[:needed_images], rows, cols)
         combined.save(f'{current_dir}/combined_figure.png')
         print(f"已保存第 {i} 轮迭代的组合图像")
         
