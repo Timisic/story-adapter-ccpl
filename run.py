@@ -1,7 +1,7 @@
 import torch
 from diffusers import StableDiffusionXLPipeline, StableDiffusionImg2ImgPipeline, StableDiffusionInpaintPipelineLegacy, \
     DDIMScheduler, AutoencoderKL
-from PIL import Image
+from PIL import Image, ImageDraw, ImageFont
 import numpy as np
 from ip_adapter import StoryAdapterXL
 import os
@@ -95,7 +95,7 @@ def create_story_directories(story_num):
     }
     
     # 创建迭代结果目录
-    for i in range(1, 9):  # 假设最多10次迭代
+    for i in range(1, 9):
         directories[f'iteration_{i}'] = f'{story_dir}/results_xl{i}'
     
     # 创建所有必要的目录
@@ -108,11 +108,8 @@ def calculate_grid_size(num_images):
     """计算最优的网格大小，避免过多留白"""
     if num_images <= 4:
         return 2, 2
-    # 计算最小的能容纳所有图片的方形网格
     cols = int(np.ceil(np.sqrt(num_images)))
-    # 计算所需的行数
     rows = int(np.ceil(num_images / cols))
-    # 如果最后一行全是空的，减少一行
     if rows * cols - num_images >= cols:
         rows -= 1
     return rows, cols
@@ -123,15 +120,16 @@ def add_text_to_image(image, text):
     # 计算合适的字体大小（基于图像高度）
     font_size = int(image.height * 0.05)  # 图像高度的5%
     try:
-        # 优先使用苹方字体以支持中文
-        font = ImageFont.truetype("/System/Library/Fonts/PingFang.ttc", font_size)
+        # Linux系统常见中文字体路径
+        font = ImageFont.truetype("/usr/share/fonts/truetype/wqy/wqy-microhei.ttc", font_size)
     except:
-        # 如果找不到苹方字体，尝试其他中文字体
         try:
-            font = ImageFont.truetype("/System/Library/Fonts/STHeiti Light.ttc", font_size)
+            # 备选字体路径
+            font = ImageFont.truetype("/usr/share/fonts/truetype/droid/DroidSansFallbackFull.ttf", font_size)
         except:
+            # 如果都找不到，使用默认字体
             font = ImageFont.load_default()
-            font_size = 24  # 默认字体大小
+            font_size = 24
 
     # 计算文字位置
     text_bbox = draw.textbbox((0, 0), text, font=font)
@@ -151,7 +149,6 @@ def add_text_to_image(image, text):
     draw.text((x, y), text, font=font, fill=(255, 255, 255))  # 纯白色文字
     return image
 
-# 在 generate_initial_images 函数中替换文字添加部分
 def generate_initial_images(prompts, story_dirs, seed, style, annotations=None, use_annotations=False):
     initial_images = []
     
@@ -195,7 +192,6 @@ def generate_initial_images(prompts, story_dirs, seed, style, annotations=None, 
     
     return initial_images
 
-# 在 generate_iterative_images 函数中替换文字添加部分
 def generate_iterative_images(prompts, initial_images, story_dirs, seed, style, annotations=None, use_annotations=False):
     scales = np.linspace(0.3, 0.5, 10)
     current_images = initial_images
@@ -227,11 +223,9 @@ def generate_iterative_images(prompts, initial_images, story_dirs, seed, style, 
             
             new_images.append(images[0].resize((256, 256)))
         
-        # 拼接组合图像
         num_images = len(new_images)
         rows, cols = calculate_grid_size(num_images)
         
-        # 只填充必要的空白图像
         needed_images = rows * cols
         while len(new_images) < needed_images:
             blank_image = Image.new('RGB', (256, 256), 'white')
