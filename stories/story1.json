@@ -1,0 +1,19 @@
+{
+    "story": [
+        "In a park, a dejected Zhang is sitting on a bench, looking downcast, recollecting his failed exam despite hard revision.",
+        "Zhang, with a furrowed brow, is deep in self - doubting thoughts like 'Am I too incompetent? Will I never succeed?'",
+        "Zhang, with a determined look, is starting his mindfulness meditation session, ready to focus.",
+        "With eyes closed, Zhang is following the system's guidance for mindful breathing, a serene expression on his face.",
+        "Zhang opens his eyes, looking much calmer, realizing that failure is a chance to learn, not a reflection of his worth."
+    ],
+    "character_replacements": {
+        "Zhang": "a college student in a blue jacket"
+    },
+    "annotations": [
+        "一个学生因考试失败而感到沮丧，独自坐在公园长椅上回顾自己的努力",
+        "学生陷入自我怀疑的情绪中，质疑自己的能力和未来",
+        "学生决定尝试正念冥想，开始寻找内心的平静",
+        "在冥想指导下，学生专注于呼吸，表情逐渐变得平和",
+        "学生睁开眼睛，意识到失败是学习的机会，而不是自我价值的否定"
+    ]
+}

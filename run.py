@@ -16,7 +16,9 @@ parser.add_argument('--image_encoder_path', type=str, default=r"./IP-Adapter/sdx
 parser.add_argument('--ip_ckpt', default=r"./IP-Adapter/sdxl_models/ip-adapter_sdxl.bin", type=str)
 parser.add_argument('--style', type=str, default='realistic', choices=["comic","film","realistic"])
 parser.add_argument('--device', default="cuda", type=str)
-parser.add_argument('--story', type=int, default=0, help='故事编号 (0-6), 或使用自定义故事列表')
+parser.add_argument('--story', type=int, default=0, help='故事编号，或使用自定义故事列表')
+parser.add_argument('--use_annotations', default=False, action='store_true', help='是否在图像上添加文字注释')
+
 
 args = parser.parse_args()
 
@@ -63,19 +65,14 @@ print(seed)
 # load story-adapter
 storyadapter = StoryAdapterXL(pipe, image_encoder_path, ip_ckpt, device)
 
-character=True
+character = True
 # 获取故事内容
-if isinstance(args.story, int):
-    if args.story in stories:
-        story_content = stories[args.story]
-        story_num = args.story
-    else:
-        raise ValueError(f"故事编号 {args.story} 不存在")
-else:
-    story_content = args.story
-    story_num = "custom"
+story_content, story_num, character_replacements, annotations = get_story(args.story)
+if story_content is None:
+    raise ValueError(f"故事编号 {args.story} 不存在")
 
-prompts = replace_characters(story_content, character)
+
+prompts = replace_characters(story_content, character_replacements, character)
 
 def create_story_directories(story_num):
     """
@@ -107,23 +104,10 @@ def create_story_directories(story_num):
         
     return directories
 
-def generate_initial_images(prompts, story_dirs, seed, style):
-    """
-    生成初始图像
-    
-    Args:
-        prompts: 提示文本列表
-        story_dirs: 目录路径字典
-        seed: 随机种子
-        style: 生成风格
-    
-    Returns:
-        list: 生成的图像列表（调整为256x256大小）
-    """
+def generate_initial_images(prompts, story_dirs, seed, style, annotations=None, use_annotations=False):
     initial_images = []
     
     print(f"\n正在生成初始图像，保存至: {story_dirs['initial_results']}")
-    # 为每个提示生成初始图像
     for i, text in enumerate(prompts):
         images = storyadapter.generate(
             pil_image=None,
@@ -139,25 +123,49 @@ def generate_initial_images(prompts, story_dirs, seed, style):
         # 保存生成的图像
         output_path = f'{story_dirs["initial_results"]}/img_{i}.png'
         grid = image_grid(images, 1, 1)
+        if use_annotations and annotations and i < len(annotations):
+            # 在图像上添加文字注释
+            from PIL import ImageDraw, ImageFont
+            draw = ImageDraw.Draw(grid)
+            try:
+                font = ImageFont.truetype("/System/Library/Fonts/PingFang.ttc", 24)
+            except:
+                font = ImageFont.load_default()
+            text = annotations[i]
+            # 在图像底部添加文字
+            text_bbox = draw.textbbox((0, 0), text, font=font)
+            text_width = text_bbox[2] - text_bbox[0]
+            text_height = text_bbox[3] - text_bbox[1]
+            x = (grid.width - text_width) // 2
+            y = grid.height - text_height - 10
+            # 添加半透明背景
+            draw.rectangle([0, y-5, grid.width, y+text_height+5], fill=(0, 0, 0, 128))
+            draw.text((x, y), text, font=font, fill=(255, 255, 255))
         grid.save(output_path)
         print(f"已保存第 {i+1}/{len(prompts)} 张初始图像")
         
         resized_image = Image.open(output_path).resize((256, 256))
         initial_images.append(resized_image)
     
+    # 拼接组合图像
+    num_images = len(initial_images)
+    if num_images <= 4:
+        rows, cols = 2, 2
+    else:
+        rows = cols = int(np.ceil(np.sqrt(num_images)))
+    
+    # 填充空白图像确保能够完整拼接
+    while len(initial_images) < rows * cols:
+        blank_image = Image.new('RGB', (256, 256), 'white')
+        initial_images.append(blank_image)
+    
+    combined = image_grid(initial_images, rows, cols)
+    combined.save(f'{story_dirs["initial_results"]}/combined_figure.png')
+    print(f"已保存组合图像至 {story_dirs['initial_results']}/combined_figure.png")
+    
     return initial_images
 
-def generate_iterative_images(prompts, initial_images, story_dirs, seed, style):
-    """
-    进行迭代图像生成
-    
-    Args:
-        prompts: 提示文本列表
-        initial_images: 初始图像列表
-        story_dirs: 目录路径字典
-        seed: 随机种子
-        style: 生成风格
-    """
+def generate_iterative_images(prompts, initial_images, story_dirs, seed, style, annotations=None, use_annotations=False):
     scales = np.linspace(0.3, 0.5, 10)
     current_images = initial_images
     
@@ -181,15 +189,49 @@ def generate_iterative_images(prompts, initial_images, story_dirs, seed, style):
             # 保存生成的图像
             output_path = f'{current_dir}/img_{y}.png'
             grid = image_grid(images, 1, 1)
+            if use_annotations and annotations and y < len(annotations):
+                # 在图像上添加文字注释
+                from PIL import ImageDraw, ImageFont
+                draw = ImageDraw.Draw(grid)
+                try:
+                    font = ImageFont.truetype("/System/Library/Fonts/PingFang.ttc", 24)
+                except:
+                    font = ImageFont.load_default()
+                text = annotations[y]
+                # 在图像底部添加文字
+                text_bbox = draw.textbbox((0, 0), text, font=font)
+                text_width = text_bbox[2] - text_bbox[0]
+                text_height = text_bbox[3] - text_bbox[1]
+                x = (grid.width - text_width) // 2
+                y = grid.height - text_height - 10
+                # 添加半透明背景
+                draw.rectangle([0, y-5, grid.width, y+text_height+5], fill=(0, 0, 0, 128))
+                draw.text((x, y), text, font=font, fill=(255, 255, 255))
             grid.save(output_path)
             print(f"已保存第 {y+1}/{len(prompts)} 张图像")
             
             new_images.append(images[0].resize((256, 256)))
+        
+        # 拼接组合图像
+        num_images = len(new_images)
+        if num_images <= 4:
+            rows, cols = 2, 2
+        else:
+            rows = cols = int(np.ceil(np.sqrt(num_images)))
+        
+        # 填充空白图像确保能够完整拼接
+        while len(new_images) < rows * cols:
+            blank_image = Image.new('RGB', (256, 256), 'white')
+            new_images.append(blank_image)
+        
+        combined = image_grid(new_images, rows, cols)
+        combined.save(f'{current_dir}/combined_figure.png')
+        print(f"已保存第 {i} 轮迭代的组合图像")
         
         print(f"第 {i} 轮迭代完成")
         current_images = new_images
 
 
 story_dirs = create_story_directories(story_num)
-initial_images = generate_initial_images(prompts, story_dirs, seed, style)
-generate_iterative_images(prompts, initial_images, story_dirs, seed, style)
+initial_images = generate_initial_images(prompts, story_dirs, seed, style, annotations, args.use_annotations)
+generate_iterative_images(prompts, initial_images, story_dirs, seed, style, annotations, args.use_annotations)
