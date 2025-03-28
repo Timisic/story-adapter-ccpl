@@ -1,0 +1,49 @@
+{
+  "story": [
+    "In her cram school classroom, Lin Zhen stares at endless equations, fingers twisting her long hair into knots, a ticking clock mocking her panic.",
+    "Under the ancient ginkgo tree, Lin Zhen tries lotus position but wobbles, autumn leaves sticking to her messy uniform.",
+    "Zen teacher places pebble on Lin Zhen's head: 'When thoughts come, imagine them as wind moving through leaves.'",
+    "Math test stress: Lin Zhen presses palms together under desk, picturing numbers as cranes flying over mountains.",
+    "Rainy bus ride: Lin Zhen matches breath to wiper rhythm 'swoosh-in...swoosh-out...' until phone buzzes break focus.",
+    "Night study: Lin Zhen lights candle, watches flame dance with breath - jumps when wax drips on chemistry notes.",
+    "School roof: Lin Zhen balances like heron on one leg, uniform skirt flapping, lasts four breaths before giggling.",
+    "Art class: Lin Zhen paints breath as ink waves, teacher displays her 'Mindful River' scroll beside equations.",
+    "Library breakdown: Lin Zhen notices death-grip on pen, slowly opens hand like releasing trapped butterfly.",
+    "Lunch break: Lin Zhen eats rice ball grain by grain, classmates laugh when seaweed sticks to her cheek.",
+    "Fire drill chaos: Lin Zhen walks breathing 'left-inhale, right-exhale', imagines alarm as temple bell.",
+    "Park bench: Lin Zhen watches ant carry crumb, breathes until worry feels ant-sized in her chest.",
+    "Cafeteria noise: Lin Zhen focuses on soup steam swirls, almost dips pigtail in broth counting breaths.",
+    "History exam: Lin Zhen draws tiny zen gardens in margins, arranges pebbles with each calm exhale.",
+    "Study group: Lin Zhen teaches friends 'pebble stacking' focus game, tower crashes during math debate.",
+    "Night ritual: Lin Zhen tracks moon shadows moving across floor during 7-minute sit, cat pounces shadow.",
+    "English class: Lin Zhen hums 'Om' during oral test, vibrations steady her shaking knees.",
+    "Sports day: Lin Zhen races while chanting 'inhale-left, exhale-right', almost trips but finishes.",
+    "Final exam: Lin Zhen draws expanding lotus in margin that blooms with each steady belly breath.",
+    "Graduation: Lin Zhen leads classmates in outdoor meditation, dandelion seeds carry wishes skyward."
+  ],
+  "character_replacements": {
+    "Lin Zhen": "A 17-year-old Chinese girl with long black hair, wearing blue/white school uniform, permanent dark circles"
+  },
+  "annotations": [
+    "补习班里，林真盯着无尽公式，手指绞缠长发打结，时钟滴答声加剧恐慌",
+    "银杏树下初试莲花坐，林真的校服沾满落叶，身体摇晃不稳",
+    "禅修老师放石子于林真头顶：『杂念如风过叶梢，勿追勿拒』",
+    "数学考试时桌下合掌观想：数字化为群鹤飞越山峦",
+    "雨天公交匹配雨刷呼吸法，直到手机震动打破节奏",
+    "夜读时观察烛火摇曳，蜡油滴落化学笔记吓一跳",
+    "天台单腿鹤立平衡，校服裙摆飞扬，坚持四息后笑场",
+    "美术课将呼吸画成水墨波浪，作品《正念之河》与公式并列展示",
+    "图书馆崩溃时发现紧攥钢笔，如放生蝴蝶般缓缓松手",
+    "午餐练习一粒粒吃饭团，海苔粘脸遭同学取笑",
+    "消防演习中踏『左吸右呼』步伐，幻想警报是寺院钟声",
+    "公园长椅观察蚂蚁搬食，呼吸间胸中烦恼缩成蚁型",
+    "食堂喧嚣中专注汤面热气，数呼吸时马尾辫险些浸入汤里",
+    "历史考试在卷边画微型枯山水，每呼气摆一颗鹅卵石",
+    "学习小组教叠石游戏，数学争论时石塔轰然倒塌",
+    "夜间追踪月光移动轨迹静坐七分钟，被猫扑影子打断",
+    "英语口试时低吟『Om』，声波振动稳住发抖的膝盖",
+    "运动会边跑边念『吸左呼右』，踉跄中坚持到终点",
+    "大考时在卷边画随呼吸绽放的莲花，与腹式呼吸同步",
+    "毕业典礼带领同学户外禅坐，蒲公英载愿望飞向晴空"
+  ]
+}

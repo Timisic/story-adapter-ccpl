@@ -14,7 +14,7 @@ parser = argparse.ArgumentParser()
 parser.add_argument('--base_model_path', default=r"./RealVisXL_V4.0", type=str)
 parser.add_argument('--image_encoder_path', type=str, default=r"./IP-Adapter/sdxl_models/image_encoder")
 parser.add_argument('--ip_ckpt', default=r"./IP-Adapter/sdxl_models/ip-adapter_sdxl.bin", type=str)
-parser.add_argument('--style', type=str, default='realistic', choices=["comic","film","realistic"])
+parser.add_argument('--style', type=str, default='film', choices=["comic","film","realistic"])
 parser.add_argument('--device', default="cuda", type=str)
 parser.add_argument('--story', type=int, default=0, help='故事编号，或使用自定义故事列表')
 parser.add_argument('--use_annotations', action='store_true', help='是否在图像上添加文字注释')
@@ -120,33 +120,62 @@ def add_text_to_image(image, text):
     # 计算合适的字体大小（基于图像高度）
     font_size = int(image.height * 0.05)  # 图像高度的5%
     try:
-        # Linux系统常见中文字体路径
         font = ImageFont.truetype("/usr/share/fonts/truetype/wqy/wqy-microhei.ttc", font_size)
     except:
         try:
-            # 备选字体路径
             font = ImageFont.truetype("/usr/share/fonts/truetype/droid/DroidSansFallbackFull.ttf", font_size)
         except:
-            # 如果都找不到，使用默认字体
             font = ImageFont.load_default()
             font_size = 24
 
-    # 计算文字位置
-    text_bbox = draw.textbbox((0, 0), text, font=font)
-    text_width = text_bbox[2] - text_bbox[0]
-    text_height = text_bbox[3] - text_bbox[1]
+    # 计算每行最大字符数
+    max_chars_per_line = int(image.width / (font_size * 0.8))  # 0.7是一个经验值，可以根据需要调整
     
-    # 文字位置（底部居中）
-    x = (image.width - text_width) // 2
-    y = image.height - text_height - int(image.height * 0.08)  # 距底部8%
+    # 文本分行
+    words = text.split()
+    lines = []
+    current_line = []
+    current_length = 0
+    
+    for word in words:
+        if current_length + len(word) + 1 <= max_chars_per_line:
+            current_line.append(word)
+            current_length += len(word) + 1
+        else:
+            lines.append(' '.join(current_line))
+            current_line = [word]
+            current_length = len(word)
+    
+    if current_line:
+        lines.append(' '.join(current_line))
+    
+    # 如果只有一行，直接使用原文本
+    if not lines:
+        lines = [text]
+    
+    # 计算所有文本的总高度
+    line_spacing = int(font_size * 1.2)  # 行间距
+    total_text_height = len(lines) * line_spacing
+    
+    # 计算起始Y坐标（从底部向上）
+    y = image.height - total_text_height - int(image.height * 0.08)  # 距底部8%
     
     # 添加半透明黑色背景
     padding = int(font_size * 0.5)  # 文字周围的内边距
-    background_box = [0, y - padding, image.width, y + text_height + padding]
-    draw.rectangle(background_box, fill=(0, 0, 0, 180))  # 更深的半透明背景
+    background_box = [0, y - padding, image.width, y + total_text_height + padding]
+    draw.rectangle(background_box, fill=(0, 0, 0, 80))  # 降低透明度（140 -> 更透明）
     
-    # 绘制文字
-    draw.text((x, y), text, font=font, fill=(255, 255, 255))  # 纯白色文字
+    # 绘制每一行文字
+    for i, line in enumerate(lines):
+        # 计算当前行的宽度和位置
+        text_bbox = draw.textbbox((0, 0), line, font=font)
+        text_width = text_bbox[2] - text_bbox[0]
+        x = (image.width - text_width) // 2
+        current_y = y + i * line_spacing
+        
+        # 绘制文字
+        draw.text((x, current_y), line, font=font, fill=(255, 255, 255))
+
     return image
 
 def generate_initial_images(prompts, story_dirs, seed, style, annotations=None, use_annotations=False):

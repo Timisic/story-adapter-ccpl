@@ -1,0 +1,19 @@
+{
+    "story": [
+        "In a sunlit park, a teenage boy slumps on a wooden bench, clutching a crumpled F-grade exam paper, autumn leaves falling around his downcast face.",
+        "Close up, the boy grips his hair in frustration, dark thoughts swirling visibly around him, his expression twisted with self-doubt and anxiety.",
+        "At the bench, the boy holds a smartphone displaying a mindfulness app, his furrowed brows showing internal conflict as he considers his choices.",
+        "Under a cherry tree, the boy sits cross-legged with eyes closed, golden breathing lines visible, his expression peaceful as sunlight filters through.",
+        "On the grass, the boy smiles softly at his exam paper, surrounded by blooming flowers, his phone showing meditation progress nearby."
+    ],
+    "character_replacements": {
+        "boy": "a teenage Asian student in a blue hoodie, around 15 years old, with a gentle face showing emotional vulnerability"
+    },
+    "annotations": [
+        "少年因考试失败而沮丧地坐在公园长椅上，周围飘落着秋叶",
+        "少年痛苦地抓着头发，内心充满自我怀疑和焦虑",
+        "少年犹豫地看着手机上的冥想应用，表情透露着内心挣扎",
+        "少年在樱花树下盘腿而坐，闭目冥想，表情安详",
+        "少年坐在草地上，微笑着看试卷，周围绽放着鲜花"
+    ]
+}
